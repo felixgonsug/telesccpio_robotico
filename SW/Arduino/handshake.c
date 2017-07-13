@@ -1,22 +1,24 @@
 void handshake() {
-	// Si intente 
+	// Si intente resetear la pc MaxResetsPC me quedo en error esperando reset 
 	if (intento_resetPC > MaxResetsPC){
 		error_pc = 1;
 		Serial.write(error_pc);
 	} else {
+		leido = 0;
 		//intento comunicarme 15 veces
 		for (intento_com = 0; intento_com < MaxIntento_com ; intento_om++ ) {
 			//envío el saludo a ser respondido, niego el saludo para la proxima recepción de datos
 			Serial.write(hola);
 			hola = !hola;
-			//envio datos del clima y los ultimos datos recibidos para mitigar errores de lectura
+			//envio datos del clima y los ultimos datos recibidos para mitigar errores de lectura y envío errores en cerrado o abierto si los hubo
 			Serial.write(datos_clima);
 			Serial.write(reset1);
 			Serial.write(reset2);
 			Serial.write(ACN);
+			Serial.write(informe_errores);
 			//doy tiempo a generar respuesta
 			delay(tiempo_com);
-			// una vez obtenga respuesta
+			// si no obtengo respuesta vuelvo a intentar
 			if (serial.available() > 0) {
 				//leo la respuesta del saludo y verifico que sea coherente
 				respuesta = serial.read()
@@ -28,15 +30,13 @@ void handshake() {
 					leido = 1;
 					//salgo del for
 					intento_com = MaxIntento_com;
-				}
-			//si la respuesta no es coherente, agrego un delay y realizo un nuevo saludo
-			else{
+				} else{ //si la respuesta no es coherente, agrego un delay y realizo un nuevo saludo
 					delay(t_nueva_consulta);
 				}
 			}
 		}
 		//si no pude comunicarme con la pc:
-		if (!leyo &&  intento_com = MaxIntento_com) {
+		if (!leido &&  intento_com >= MaxIntento_com) {
 			//cierro tapa, reseteo la pc y espero el tiempo necesario de arranque de la pc
 			CerrarTapa();
 			digitalWrite(resetPC,  1);
@@ -48,11 +48,13 @@ void handshake() {
 		//si pude comunicarme:
 		} else {
 			//Realizo los reset si son necesarios
-			digitalWrite(resetMontura,  reset1);
-			digitalWrite(resetCamara,  reset2);
-			delay(tmin_reset);
-			digitalWrite(resetMontura,  0);
-			digitalWrite(resetMontura,  0);
+			if (reset1 OR reset2) {
+				digitalWrite(resetMontura,  reset1);
+				digitalWrite(resetCamara,  reset2);
+				delay(tmin_reset);
+				digitalWrite(resetMontura,  0);
+				digitalWrite(resetMontura,  0);
+			}
 		}
 	}
 }
