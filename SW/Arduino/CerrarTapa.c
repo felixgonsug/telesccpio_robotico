@@ -6,6 +6,7 @@ void CerrarTapa() {
 		while (pasos <= MaxPAsos && !digitalRead(FinCarreraCerrado)) { //avanzo hasta completar pasos o sensor cerrado = 1
 			AvanzarPaso();
 			pasos++;
+			delay(max_vel_motor)
 		}
 		if (pasos > MaxPAsos) { //si no hubo senal del sensor de cerrado imprimo error de cerrado
 			error_cerrando = 1;
